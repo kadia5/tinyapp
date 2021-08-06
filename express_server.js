@@ -10,7 +10,7 @@ function generateRandomString () {
   return result;
 }
 const express = require ('express');
-var cookieParser = require ('cookie-parser');
+const cookieSession = require('cookie-session')
 const app = express ();
 const PORT = 8080; // default port 8080
 const bodyParser = require ('body-parser');
@@ -56,7 +56,11 @@ const getUser = function (inputEmail) {
 
 //change email to 1@1.com password to 1
 
-app.use (cookieParser ());
+app.use(cookieSession({
+  name: 'session',
+  keys: ['key']
+
+}))
 app.set ('view engine', 'ejs');
 app.use (bodyParser.urlencoded ({extended: true}));
 
@@ -75,7 +79,7 @@ const urlDatabase = {
 
 app.get ('/urls/new', (req, res) => {
   const longURL = req.params.longURL
-  const user_id = req.cookies.user_id;
+  const user_id = req.session.user_id;
   const templateVars = {user: users[user_id],};
   res.render ('urls_new', templateVars);
 });
@@ -93,8 +97,8 @@ app.get ('/hello', (req, res) => {
 });
 
 app.get ('/urls', (req, res) => {
-  console.log ('user id from cookie', req.cookies.user_id);
-  const user_id = req.cookies.user_id;
+  console.log ('user id from cookie', req.session.user_id);
+  const user_id = req.session.user_id;
   if(!user_id){
     res.redirect('/login');
   }
@@ -105,7 +109,7 @@ app.get ('/urls', (req, res) => {
 
 app.get ('/urls/:shortURL', (req, res) => {
   let shortURL = req.params.shortURL;
-  const user_id = req.cookies.user_id;
+  const user_id = req.session.user_id;
   const templateVars = {
     shortURL: shortURL,
     longURL: urlDatabase[shortURL].longURL,
@@ -120,14 +124,14 @@ app.get ('/u/:shortURL', (req, res) => {
 });
 
 app.get ('/register', (req, res) => {
-  const user_id = req.cookies.user_id;
-  const templateVars = {urls: urlDatabase, user: req.cookies.user};
+  const user_id = req.session.user_id;
+  const templateVars = {urls: urlDatabase, user: req.session.user};
   res.render ('urls_register', templateVars);
 });
 
 app.get ('/login', (req, res) => {
-  const user_id = req.cookies.user_id;
-  const templateVars = {urls: urlDatabase, user: req.cookies.user};
+  const user_id = req.session.user_id;
+  const templateVars = {urls: urlDatabase, user: req.session.user};
   res.render ('urls_login', templateVars);
 });
 
@@ -139,7 +143,7 @@ app.post ('/urls', (req, res) => {
   // console.log(randoString);
   urlDatabase[shortURL] = {
     longURL: req.body.longURL, 
-    userID: req.cookies.user_id,
+    userID: req.session.user_id,
   
   };
   // console.log(urlDatabase);
@@ -147,7 +151,7 @@ app.post ('/urls', (req, res) => {
 });
 
 app.post ('/urls/:longURL/delete', (req, res) => {
-  const user_id = req.cookies.user_id;
+  const user_id = req.session.user_id;
   if(!user_id){
     res.redirect('/login');
   }
@@ -159,7 +163,7 @@ app.post ('/urls/:longURL/delete', (req, res) => {
 
 app.post ('/urls/:longURL/edit', (req, res) => {
   // console.log("i miss kyle lowry already")
-  const user_id = req.cookies.user_id;
+  const user_id = req.session.user_id;
   if(!user_id){
     res.redirect('/login');
   }
@@ -191,13 +195,13 @@ app.post('/login', (req, res) => {
       return res.status(403).send("Password doesn't match");
     }
 
-    res.cookie('user_id', user.id);
+    req.session.user_id = user.id;
     res.redirect(`/urls`);
   }
 });
 
 app.post ('/logout', (req, res) => {
-  res.cookie ('user_id', '');
+  req.session.user_id = "";
   //  urlDatabase[username]= req.body.url;
   res.redirect (`/urls`);
 });
@@ -222,7 +226,7 @@ app.post ('/register', (req, res) => {
   users[user_id] = user;
   console.log (users);
 
-  res.cookie ('user_id', user_id);
+  req.session.user_id = user_id;
   res.redirect (`/urls`);
 });
 
