@@ -9,17 +9,25 @@ function generateRandomString () {
   }
   return result;
 }
+const express = require ('express');
+var cookieParser = require ('cookie-parser');
+const app = express ();
+const PORT = 8080; // default port 8080
+const bodyParser = require ('body-parser');
+const bcryptjs = require('bcryptjs');
+const password = "1"; // found in the req.params object
+const hashedPassword = bcryptjs.hashSync(password, 10);
 
 const users = {
   userRandomID: {
     id: 'userRandomID',
     email: '101@example.com',
-    password: '1',
+    password: bcryptjs.hashSync("1", 10),
   },
   user2RandomID: {
     id: 'user2RandomID',
     email: 'user2@example.com',
-    password: 'dishwasher-funk',
+    password: bcryptjs.hashSync('2', 7)
   },
 };
 
@@ -43,11 +51,8 @@ const getUser = function (inputEmail) {
   }
 };
 
-const express = require ('express');
-var cookieParser = require ('cookie-parser');
-const app = express ();
-const PORT = 8080; // default port 8080
-const bodyParser = require ('body-parser');
+
+
 
 //change email to 1@1.com password to 1
 
@@ -181,9 +186,11 @@ app.post('/login', (req, res) => {
   if (emailAlreadyTaken(req.body.email)) {
     console.log("email present")
     const user = getUser(req.body.email);
-    if (user.password !== req.body.password) {
+    let checkPassword = bcryptjs.compareSync(req.body.password, user.password)
+    if (!checkPassword) {
       return res.status(403).send("Password doesn't match");
     }
+
     res.cookie('user_id', user.id);
     res.redirect(`/urls`);
   }
@@ -205,10 +212,11 @@ app.post ('/register', (req, res) => {
   }
 
   const user_id = generateRandomString ();
+  const password = req.body.password
   const user = {
     id: user_id,
     email: req.body.email,
-    password: req.body.password,
+    password: bcryptjs.hashSync(password, 10),
   };
   //below = user name(rando), user info (object above) saved to users
   users[user_id] = user;
