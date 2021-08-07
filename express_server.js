@@ -37,8 +37,6 @@ const users = {
   },
 };
 
-//change email to 1@1.com password to 1
-
 app.use (
   cookieSession ({
     name: 'session',
