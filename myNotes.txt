@@ -1,0 +1,11 @@
+-req.body =how info moves from browser to server. 
+-templateVars= how info moves from server to browser
+-partials= copy and paste value of whole file 
+- set cookies =
+-get cookies=
+-dif btwn res.render/res.redirect
+-req.params= get info from url(url params"refer back to structure)
+using it as :shortURL
+-render without / = grabbing urls html file directly vs /urls which redirecets using redirect
+- debugging  res.send("<p> ok </p>") see if it appears on page
+- whenever i submit a form it goes into req.body
