@@ -17,6 +17,10 @@ const bodyParser = require ('body-parser');
 const bcryptjs = require('bcryptjs');
 const password = "1"; // found in the req.params object
 const hashedPassword = bcryptjs.hashSync(password, 10);
+const {
+  //  emailAlreadyTaken, 
+   getUserByEmail 
+} = require ('./helpers')
 
 const users = {
   userRandomID: {
@@ -30,27 +34,6 @@ const users = {
     password: bcryptjs.hashSync('2', 7)
   },
 };
-
-const emailAlreadyTaken = function (inputEmail) {
-  console.log(inputEmail)
-
-  for (let key in users) {
-    console.log(users[key].email)
-    if (users[key].email == inputEmail) {
-      return true;
-    }
-  }
-  return false;
-};
-
-const getUser = function (inputEmail) {
-  for (let key in users) {
-    if (users[key].email == inputEmail) {
-      return users[key];
-    }
-  }
-};
-
 
 
 
@@ -101,15 +84,23 @@ app.get ('/urls', (req, res) => {
   const user_id = req.session.user_id;
   if(!user_id){
     res.redirect('/login');
+  } else {
+  let filteredUrls = {};
+  for (const url in urlDatabase){
+    console.log("foo", urlDatabase[url].userID)
+    if (urlDatabase[url].userID === user_id) {
+      filteredUrls[url] = urlDatabase[url];
+    }
   }
-  console.log ('user info', users[user_id]);
-  const templateVars = {urls: urlDatabase, user: users[user_id]};
+  const templateVars = {urls: filteredUrls, user: users[user_id]};
   res.render ('urls_index', templateVars);
+}
 });
 
 app.get ('/urls/:shortURL', (req, res) => {
   let shortURL = req.params.shortURL;
   const user_id = req.session.user_id;
+  
   const templateVars = {
     shortURL: shortURL,
     longURL: urlDatabase[shortURL].longURL,
@@ -136,6 +127,7 @@ app.get ('/login', (req, res) => {
 });
 
 app.post ('/urls', (req, res) => {
+  console.log("foo")
   let shortURL = generateRandomString ();
   console.log(req.body)
   // console.log(req.body);  // Log the POST request body to the console
@@ -164,16 +156,19 @@ app.post ('/urls/:longURL/delete', (req, res) => {
 app.post ('/urls/:longURL/edit', (req, res) => {
   // console.log("i miss kyle lowry already")
   const user_id = req.session.user_id;
+
   if(!user_id){
     res.redirect('/login');
   }
   const longURL = req.params.longURL;
+
   res.redirect (`/urls/${longURL}`);
 });
 
 
 app.post ('/urls/:id', (req, res) => {
   //checks
+  console.log("foobar")
   const id = req.params.id;
   urlDatabase[id].longURL = req.body.url;
   res.redirect (`/urls`);
@@ -186,10 +181,10 @@ app.post('/login', (req, res) => {
   if(req.body.email === '' || req.body.password === '') {
     return res.status(403).send('Must enter email or password!');
   }
-  console.log(emailAlreadyTaken(req.body.email))
-  if (emailAlreadyTaken(req.body.email)) {
+  // console.log(emailAlreadyTaken(req.body.email, urlDatabase))
+  if (getUserByEmail(req.body.email, users)) {
     console.log("email present")
-    const user = getUser(req.body.email);
+    const user = getUserByEmail(req.body.email, users);
     let checkPassword = bcryptjs.compareSync(req.body.password, user.password)
     if (!checkPassword) {
       return res.status(403).send("Password doesn't match");
@@ -211,7 +206,7 @@ app.post ('/register', (req, res) => {
     return res.status (400).send ('Must enter email or password!');
   }
   //below is how to use a true/false function
- if (emailAlreadyTaken (req.body.email)) {
+ if (getUserByEmail(req.body.email, users)) {
     return res.status (400).send ('Email Already Taken');
   }
 
@@ -233,3 +228,5 @@ app.post ('/register', (req, res) => {
 app.listen (PORT, () => {
   console.log (`Example app listening on port ${PORT}!`);
 });
+
+
