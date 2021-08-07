@@ -37,8 +37,6 @@ const users = {
   },
 };
 
-//change email to 1@1.com password to 1
-
 app.use (
   cookieSession ({
     name: 'session',
@@ -79,7 +77,6 @@ app.get ('/hello', (req, res) => {
 });
 
 app.get ('/urls', (req, res) => {
-  console.log ('user id from cookie', req.session.user_id);
   const user_id = req.session.user_id;
 
   if (!user_id) {
@@ -88,7 +85,6 @@ app.get ('/urls', (req, res) => {
     let filteredUrls = {};
 
     for (const url in urlDatabase) {
-      console.log ('foo', urlDatabase[url].userID);
       if (urlDatabase[url].userID === user_id) {
         filteredUrls[url] = urlDatabase[url];
       }
@@ -130,9 +126,7 @@ app.get ('/login', (req, res) => {
 });
 
 app.post ('/urls', (req, res) => {
-  console.log ('foo');
   let shortURL = generateRandomString ();
-  console.log (req.body);
 
   urlDatabase[shortURL] = {
     longURL: req.body.longURL,
@@ -170,12 +164,11 @@ app.post ('/urls/:id', (req, res) => {
 
 //params is data contand in path of url + body = data in form submiss. +query is data in urls query string(e/t at end of ?)
 app.post ('/login', (req, res) => {
-  console.log ('login called', req);
   // first value below is created key, 2nd is value assigned to key
   if (req.body.email === '' || req.body.password === '') {
     return res.status (403).send ('Must enter email or password!');
   }
-  // console.log(emailAlreadyTaken(req.body.email, urlDatabase))
+  
   if (getUserByEmail (req.body.email, users)) {
     console.log ('email present');
     const user = getUserByEmail (req.body.email, users);
@@ -212,7 +205,6 @@ app.post ('/register', (req, res) => {
   };
   //below = user name(rando), user info (object above) saved to users
   users[user_id] = user;
-  console.log (users);
   req.session.user_id = user_id;
   res.redirect (`/urls`);
 });
