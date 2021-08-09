@@ -65,7 +65,13 @@ app.get ('/urls/new', (req, res) => {
 });
 
 app.get ('/', (req, res) => {
-  res.send ('Hello!');
+  //when logged in it is has data inside, else undefined
+  const user_id = req.session.user_id;
+  if (!user_id) {
+    res.redirect ('/login');
+  } else {
+    res.redirect ('/urls');
+  }
 });
 
 app.get ('/urls.json', (req, res) => {
@@ -78,7 +84,7 @@ app.get ('/hello', (req, res) => {
 
 app.get ('/urls', (req, res) => {
   const user_id = req.session.user_id;
-
+console.log(urlDatabase)
   if (!user_id) {
     res.redirect ('/login');
   } else {
@@ -97,7 +103,9 @@ app.get ('/urls', (req, res) => {
 app.get ('/urls/:shortURL', (req, res) => {
   let shortURL = req.params.shortURL;
   const user_id = req.session.user_id;
-
+  if(urlDatabase[shortURL].userID !== user_id) {
+    res.send('These Do Not Belong To You')
+  }
   const templateVars = {
     shortURL: shortURL,
     longURL: urlDatabase[shortURL].longURL,
@@ -107,8 +115,14 @@ app.get ('/urls/:shortURL', (req, res) => {
 });
 
 app.get ('/u/:shortURL', (req, res) => {
-  const longURL = shortURL;
-  res.redirect (longURL);
+  let longURL = urlDatabase[req.params.shortURL].longURL
+  // const longURL = shortURL;
+  if (!longURL.includes('http://')) {
+    longURL = 'http://' + longURL
+  }
+  res.redirect(longURL);
+  // console.log("blah",longURL)
+  // res.send(longURL)
 });
 
 app.get ('/register', (req, res) => {
@@ -132,28 +146,28 @@ app.post ('/urls', (req, res) => {
     longURL: req.body.longURL,
     userID: req.session.user_id,
   };
-  res.redirect (`/urls`);
+  res.redirect (`/urls/${shortURL}`);
 });
 
-app.post ('/urls/:longURL/delete', (req, res) => {
+app.post ('/urls/:shortURL/delete', (req, res) => {
   const user_id = req.session.user_id;
 
   if (!user_id) {
     res.redirect ('/login');
   }
-  const longURL = req.params.longURL;
-  delete urlDatabase[longURL];
+  const shortURL = req.params.shortURL;
+  delete urlDatabase[shortURL];
   res.redirect (`/urls`);
 });
 
-app.post ('/urls/:longURL/edit', (req, res) => {
+app.post ('/urls/:shortURL/edit', (req, res) => {
   const user_id = req.session.user_id;
 
   if (!user_id) {
     res.redirect ('/login');
   }
-  const longURL = req.params.longURL;
-  res.redirect (`/urls/${longURL}`);
+  const shortURL = req.params.shortURL;
+  res.redirect (`/urls/${shortURL}`);
 });
 
 app.post ('/urls/:id', (req, res) => {
@@ -162,7 +176,6 @@ app.post ('/urls/:id', (req, res) => {
   res.redirect (`/urls`);
 });
 
-//params is data contand in path of url + body = data in form submiss. +query is data in urls query string(e/t at end of ?)
 app.post ('/login', (req, res) => {
   // first value below is created key, 2nd is value assigned to key
   if (req.body.email === '' || req.body.password === '') {
@@ -177,6 +190,8 @@ app.post ('/login', (req, res) => {
     }
     req.session.user_id = user.id;
     res.redirect (`/urls`);
+  } else {
+    return res.status (403).send ("Email or password doesn't match");
   }
 });
 
