@@ -1,3 +1,4 @@
+// most completed version to test tinyapp v1
 function generateRandomString () {
   let result = '';
   let characters =
