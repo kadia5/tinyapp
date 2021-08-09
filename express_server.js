@@ -14,13 +14,13 @@ function generateRandomString () {
 const express = require ('express');
 const cookieSession = require ('cookie-session');
 const app = express ();
-const PORT = 8080; // default port 8080
+const PORT = 8080; 
 const bodyParser = require ('body-parser');
 const bcryptjs = require ('bcryptjs');
 const password = '1'; // found in the req.params object
 const hashedPassword = bcryptjs.hashSync (password, 10);
 const {
-  //  emailAlreadyTaken,
+ 
   getUserByEmail,
 } = require ('./helpers');
 
@@ -65,7 +65,7 @@ app.get ('/urls/new', (req, res) => {
 });
 
 app.get ('/', (req, res) => {
-  //when logged in it is has data inside, else undefined
+  //when logged in it has data inside, else undefined
   const user_id = req.session.user_id;
   if (!user_id) {
     res.redirect ('/login');
@@ -116,13 +116,11 @@ app.get ('/urls/:shortURL', (req, res) => {
 
 app.get ('/u/:shortURL', (req, res) => {
   let longURL = urlDatabase[req.params.shortURL].longURL
-  // const longURL = shortURL;
+  
   if (!longURL.includes('http://')) {
     longURL = 'http://' + longURL
   }
   res.redirect(longURL);
-  // console.log("blah",longURL)
-  // res.send(longURL)
 });
 
 app.get ('/register', (req, res) => {
@@ -177,7 +175,7 @@ app.post ('/urls/:id', (req, res) => {
 });
 
 app.post ('/login', (req, res) => {
-  // first value below is created key, 2nd is value assigned to key
+ 
   if (req.body.email === '' || req.body.password === '') {
     return res.status (403).send ('Must enter email or password!');
   }
@@ -204,7 +202,7 @@ app.post ('/register', (req, res) => {
   if (req.body.email === '' || req.body.password === '') {
     return res.status (400).send ('Must enter email or password!');
   }
-  //below is how to use a true/false function
+ 
   if (getUserByEmail (req.body.email, users)) {
     return res.status (400).send ('Email Already Taken');
   }
@@ -216,7 +214,7 @@ app.post ('/register', (req, res) => {
     email: req.body.email,
     password: bcryptjs.hashSync (password, 10),
   };
-  //below = user name(rando), user info (object above) saved to users
+  //below creates a random username and assigns it 
   users[user_id] = user;
   req.session.user_id = user_id;
   res.redirect (`/urls`);
